@@ -1,0 +1,52 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/Projectile.gd" id="1_script"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_tip"]
+radius = 0.18
+
+[sub_resource type="StandardMaterial3D" id="Mat_shaft"]
+albedo_color = Color(0.3, 0.2, 0.12, 1)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_shaft"]
+material = SubResource("Mat_shaft")
+top_radius = 0.025
+bottom_radius = 0.025
+height = 0.7
+radial_segments = 6
+rings = 1
+
+[sub_resource type="StandardMaterial3D" id="Mat_tip"]
+albedo_color = Color(1, 0.55, 0.15, 1)
+shading_mode = 0
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_tip"]
+material = SubResource("Mat_tip")
+top_radius = 0.0
+bottom_radius = 0.07
+height = 0.2
+radial_segments = 6
+rings = 1
+
+[node name="EnemyArrow" type="Area3D"]
+collision_layer = 16
+collision_mask = 3
+monitorable = false
+script = ExtResource("1_script")
+damage = 8.0
+speed = 7.0
+max_distance = 20.0
+hit_color = Color(1, 0.6, 0.3, 0.8)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.25)
+shape = SubResource("SphereShape3D_tip")
+
+[node name="Shaft" type="MeshInstance3D" parent="."]
+rotation = Vector3(-1.5708, 0, 0)
+mesh = SubResource("CylinderMesh_shaft")
+
+[node name="Tip" type="MeshInstance3D" parent="."]
+rotation = Vector3(-1.5708, 0, 0)
+position = Vector3(0, 0, -0.42)
+mesh = SubResource("CylinderMesh_tip")

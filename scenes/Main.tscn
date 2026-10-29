@@ -1,6 +1,16 @@
 [gd_scene format=3]
 
 [ext_resource type="PackedScene" path="res://scenes/Pillar.tscn" id="1_pillar"]
+[ext_resource type="Script" path="res://scripts/Effects.gd" id="2_effects"]
+[ext_resource type="PackedScene" path="res://scenes/Player.tscn" id="3_player"]
+[ext_resource type="Script" path="res://scripts/CameraRig.gd" id="4_camera"]
+[ext_resource type="Script" path="res://scripts/WaveManager.gd" id="5_waves"]
+[ext_resource type="PackedScene" path="res://scenes/HUD.tscn" id="6_hud"]
+[ext_resource type="PackedScene" path="res://scenes/MeleeEnemy.tscn" id="7_melee"]
+[ext_resource type="PackedScene" path="res://scenes/RangedEnemy.tscn" id="8_ranged"]
+[ext_resource type="PackedScene" path="res://scenes/BruteEnemy.tscn" id="9_brute"]
+[ext_resource type="PackedScene" path="res://scenes/Spear.tscn" id="10_spear"]
+[ext_resource type="PackedScene" path="res://scenes/EnemyArrow.tscn" id="11_arrow"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_sand"]
 albedo_color = Color(0.76, 0.62, 0.42, 1)
@@ -304,7 +314,15 @@ light_energy = 0.7
 shadow_enabled = true
 directional_shadow_max_distance = 60.0
 
+[node name="Effects" type="Node3D" parent="."]
+script = ExtResource("2_effects")
+warmup_scenes = Array[PackedScene]([ExtResource("7_melee"), ExtResource("8_ranged"), ExtResource("9_brute"), ExtResource("10_spear"), ExtResource("11_arrow")])
+
+[node name="Player" parent="." instance=ExtResource("3_player")]
+
 [node name="CameraRig" type="Node3D" parent="."]
+script = ExtResource("4_camera")
+target_path = NodePath("../Player")
 
 [node name="Camera3D" type="Camera3D" parent="CameraRig"]
 rotation = Vector3(-0.785398, 0.785398, 0)
@@ -313,3 +331,18 @@ projection = 1
 current = true
 size = 20.0
 far = 200.0
+
+[node name="Enemies" type="Node3D" parent="."]
+
+[node name="Projectiles" type="Node3D" parent="."]
+
+[node name="WaveManager" type="Node" parent="."]
+script = ExtResource("5_waves")
+melee_scene = ExtResource("7_melee")
+ranged_scene = ExtResource("8_ranged")
+brute_scene = ExtResource("9_brute")
+player_path = NodePath("../Player")
+enemies_path = NodePath("../Enemies")
+spawn_points_path = NodePath("../World/SpawnPoints")
+
+[node name="HUD" parent="." instance=ExtResource("6_hud")]
