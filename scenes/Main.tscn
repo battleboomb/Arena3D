@@ -11,6 +11,7 @@
 [ext_resource type="PackedScene" path="res://scenes/BruteEnemy.tscn" id="9_brute"]
 [ext_resource type="PackedScene" path="res://scenes/Spear.tscn" id="10_spear"]
 [ext_resource type="PackedScene" path="res://scenes/EnemyArrow.tscn" id="11_arrow"]
+[ext_resource type="PackedScene" path="res://scenes/Chest.tscn" id="12_chest"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_sand"]
 albedo_color = Color(0.76, 0.62, 0.42, 1)
@@ -313,6 +314,9 @@ light_color = Color(1, 0.95, 0.85, 1)
 light_energy = 0.7
 shadow_enabled = true
 directional_shadow_max_distance = 60.0
+
+[node name="Chest" parent="World" instance=ExtResource("12_chest")]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 0, 0, -3)
 
 [node name="Effects" type="Node3D" parent="."]
 script = ExtResource("2_effects")
