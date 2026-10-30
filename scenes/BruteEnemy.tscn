@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/BruteEnemy.gd" id="1_script"]
 
-[ext_resource type="PackedScene" path="res://assets/characters/gladiator.glb" id="9_gladiator"]
+[ext_resource type="PackedScene" path="res://assets/characters/ogre.glb" id="9_ogre"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.8
@@ -31,9 +31,9 @@ hit_radius = 0.8
 health_bar_height = 3.6
 windup_material = SubResource("Mat_windup")
 flash_material = SubResource("Mat_flash")
-tint = Color(0.5, 0.22, 0.7, 1)
-attack_animation = "sword-slash"
-attack_impact_time = 0.55
+attack_animation = "bat-slash"
+idle_animation = "bat-slash"
+attack_impact_time = 0.5
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.65, 0)
@@ -42,5 +42,5 @@ shape = SubResource("CapsuleShape3D_body")
 [node name="Body" type="Node3D" parent="."]
 
 
-[node name="Gladiator" parent="Body" instance=ExtResource("9_gladiator")]
-transform = Transform3D(-1.63, 0, 0, 0, 1.63, 0, 0, 0, -1.63, 0, 0, 0)
+[node name="Model" parent="Body" instance=ExtResource("9_ogre")]
+transform = Transform3D(-1.05, 0, 0, 0, 1.05, 0, 0, 0, -1.05, 0, 0, 0)

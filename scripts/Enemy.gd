@@ -36,6 +36,8 @@ const BAR_HEIGHT := 0.1
 @export var tint := Color(0.85, 0.16, 0.14)
 @export var show_sword := false
 @export var attack_animation := "punch"
+## 서 있을 때 첫 프레임에 멈춰 둘 애니메이션(팔 내린 자세)
+@export var idle_animation := "punch"
 ## 공격 애니메이션에서 타격이 들어가는 시점(초). 예비 동작이 끝날 때 여기에 닿도록 속도를 맞춘다.
 @export var attack_impact_time := 0.4
 @export var run_anim_speed := 1.2
@@ -63,7 +65,7 @@ var _override: Material
 var _base_pose := ""
 
 @onready var body: Node3D = $Body
-@onready var _anim: AnimationPlayer = $Body/Gladiator/AnimationPlayer
+@onready var _anim: AnimationPlayer = $Body/Model/AnimationPlayer
 
 
 func _ready() -> void:
@@ -209,7 +211,7 @@ func _setup_model() -> void:
 		_base_materials.append(base)
 
 
-## 움직이면 달리기, 서 있으면 punch 첫 프레임(팔 내린 자세)으로 멈춘다.
+## 움직이면 달리기, 서 있으면 idle_animation 첫 프레임으로 멈춘다.
 func _set_base_pose(pose: String) -> void:
 	if pose == _base_pose:
 		return
@@ -217,7 +219,7 @@ func _set_base_pose(pose: String) -> void:
 	if pose == "run":
 		_anim.play("run", 0.1, run_anim_speed)
 	else:
-		_anim.play("punch", 0.1)
+		_anim.play(idle_animation, 0.1)
 		_anim.seek(0.0, true)
 		_anim.pause()
 
