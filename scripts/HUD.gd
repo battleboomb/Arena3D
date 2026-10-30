@@ -11,6 +11,7 @@ extends CanvasLayer
 
 ## [쿨다운 이름, 키, 동작]
 const SKILLS := [["melee", "좌클릭", "칼"], ["spear", "우클릭", "창"], ["roll", "Space", "구르기"]]
+const KOREAN_FONT := preload("res://fonts/NotoSansKR-Bold.ttf")
 const SLOT_SIZE := Vector2(64, 52)
 const HP_SIZE := Vector2(220, 22)
 
@@ -122,10 +123,9 @@ func _show_result(victory: bool) -> void:
 # --- UI 만들기 ---
 
 func _make_theme() -> Theme:
-	var font := SystemFont.new()
-	font.font_names = PackedStringArray(["Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans CJK KR", "Noto Sans KR", "sans-serif"])
+	# 웹 빌드에는 시스템 글꼴이 없어 한글이 깨지므로 글꼴 파일을 게임에 넣어 쓴다.
 	var theme := Theme.new()
-	theme.default_font = font
+	theme.default_font = KOREAN_FONT
 	theme.default_font_size = 15
 	theme.set_color("font_outline_color", "Label", Color(0, 0, 0, 0.85))
 	theme.set_constant("outline_size", "Label", 4)
