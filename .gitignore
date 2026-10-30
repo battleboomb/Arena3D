@@ -5,6 +5,7 @@
 # 내보내기 결과물 (Project > Export로 만든 실행 파일)
 /build/
 /builds/
+/web_build/
 *.exe
 *.pck
 *.zip
