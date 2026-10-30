@@ -12,10 +12,18 @@
 [ext_resource type="PackedScene" path="res://scenes/Spear.tscn" id="10_spear"]
 [ext_resource type="PackedScene" path="res://scenes/EnemyArrow.tscn" id="11_arrow"]
 [ext_resource type="PackedScene" path="res://scenes/Chest.tscn" id="12_chest"]
+[ext_resource type="Texture2D" path="res://textures/ground_albedo.tres" id="13_ground_albedo"]
+[ext_resource type="Texture2D" path="res://textures/ground_normal.tres" id="14_ground_normal"]
+[ext_resource type="Texture2D" path="res://textures/stone_albedo.tres" id="15_stone_albedo"]
+[ext_resource type="Texture2D" path="res://textures/stone_normal.tres" id="16_stone_normal"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_sand"]
-albedo_color = Color(0.76, 0.62, 0.42, 1)
+albedo_texture = ExtResource("13_ground_albedo")
 roughness = 1.0
+normal_enabled = true
+normal_scale = 1.2
+normal_texture = ExtResource("14_ground_normal")
+uv1_scale = Vector3(4, 4, 1)
 
 [sub_resource type="PlaneMesh" id="PlaneMesh_ground"]
 material = SubResource("Mat_sand")
@@ -27,19 +35,37 @@ size = Vector3(40, 1, 40)
 [sub_resource type="BoxMesh" id="BoxMesh_unit"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_wall"]
-albedo_color = Color(0.72, 0.65, 0.55, 1)
+albedo_color = Color(0.9, 0.86, 0.82, 1)
+albedo_texture = ExtResource("15_stone_albedo")
 roughness = 0.95
+normal_enabled = true
+normal_texture = ExtResource("16_stone_normal")
+uv1_scale = Vector3(0.35, 0.8, 0.35)
+uv1_triplanar = true
+uv1_world_triplanar = true
 
 [sub_resource type="StandardMaterial3D" id="Mat_stand_a"]
-albedo_color = Color(0.66, 0.58, 0.48, 1)
+albedo_color = Color(0.8, 0.75, 0.7, 1)
+albedo_texture = ExtResource("15_stone_albedo")
 roughness = 0.95
+normal_enabled = true
+normal_texture = ExtResource("16_stone_normal")
+uv1_scale = Vector3(0.35, 0.8, 0.35)
+uv1_triplanar = true
+uv1_world_triplanar = true
 
 [sub_resource type="StandardMaterial3D" id="Mat_stand_b"]
-albedo_color = Color(0.6, 0.52, 0.43, 1)
+albedo_color = Color(0.7, 0.65, 0.6, 1)
+albedo_texture = ExtResource("15_stone_albedo")
 roughness = 0.95
+normal_enabled = true
+normal_texture = ExtResource("16_stone_normal")
+uv1_scale = Vector3(0.35, 0.8, 0.35)
+uv1_triplanar = true
+uv1_world_triplanar = true
 
 [sub_resource type="StandardMaterial3D" id="Mat_gate"]
-albedo_color = Color(0.16, 0.12, 0.1, 1)
+albedo_color = Color(0.1, 0.07, 0.05, 1)
 roughness = 1.0
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_wall_ns"]
@@ -50,10 +76,10 @@ size = Vector3(1, 4, 40)
 
 [sub_resource type="Environment" id="Environment_arena"]
 background_mode = 1
-background_color = Color(0.62, 0.77, 0.9, 1)
+background_color = Color(0.46, 0.38, 0.3, 1)
 ambient_light_source = 2
-ambient_light_color = Color(0.9, 0.84, 0.74, 1)
-ambient_light_energy = 0.3
+ambient_light_color = Color(0.88, 0.78, 0.66, 1)
+ambient_light_energy = 0.25
 tonemap_mode = 2
 
 [node name="Main" type="Node3D"]
@@ -310,8 +336,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18.5, 0, 10)
 
 [node name="Sun" type="DirectionalLight3D" parent="World"]
 rotation = Vector3(-0.959931, -0.523599, 0)
-light_color = Color(1, 0.95, 0.85, 1)
-light_energy = 0.7
+light_color = Color(1, 0.92, 0.78, 1)
+light_energy = 0.63
 shadow_enabled = true
 directional_shadow_max_distance = 60.0
 

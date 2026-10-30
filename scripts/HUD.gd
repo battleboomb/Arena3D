@@ -10,7 +10,7 @@ extends CanvasLayer
 @export var victory_delay := 0.6
 
 ## [쿨다운 이름, 키, 동작]
-const SKILLS := [["melee", "우클릭", "칼"], ["spear", "Q", "창"], ["roll", "Space", "구르기"]]
+const SKILLS := [["melee", "좌클릭", "칼"], ["spear", "우클릭", "창"], ["roll", "Space", "구르기"]]
 const SLOT_SIZE := Vector2(64, 52)
 const HP_SIZE := Vector2(220, 22)
 
@@ -71,6 +71,8 @@ func _process(delta: float) -> void:
 		slot.shade.size.y = SLOT_SIZE.y * ratio
 		slot.time.text = "%.1f" % left if left > 0.0 else ""
 		slot.action.visible = left <= 0.0
+		if slot.skill == "melee":
+			slot.action.text = "칼" if _player.has_sword else "주먹"
 	if _vignette_left > 0.0:
 		_vignette_left -= delta
 		_vignette.set_shader_parameter("intensity", maxf(_vignette_left / vignette_time, 0.0))

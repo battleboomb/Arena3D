@@ -2,25 +2,11 @@
 
 [ext_resource type="Script" path="res://scripts/Player.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/Spear.tscn" id="2_spear"]
+[ext_resource type="PackedScene" path="res://assets/characters/gladiator.glb" id="3_gladiator"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_body"]
 radius = 0.4
 height = 1.8
-
-[sub_resource type="StandardMaterial3D" id="Mat_body"]
-albedo_color = Color(0.2, 0.42, 0.95, 1)
-
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_body"]
-material = SubResource("Mat_body")
-radius = 0.4
-height = 1.8
-
-[sub_resource type="StandardMaterial3D" id="Mat_nose"]
-albedo_color = Color(0.95, 0.8, 0.3, 1)
-
-[sub_resource type="BoxMesh" id="BoxMesh_nose"]
-material = SubResource("Mat_nose")
-size = Vector3(0.22, 0.18, 0.3)
 
 [sub_resource type="StandardMaterial3D" id="Mat_dead"]
 albedo_color = Color(0.5, 0.5, 0.5, 1)
@@ -42,9 +28,5 @@ shape = SubResource("CapsuleShape3D_body")
 [node name="Model" type="Node3D" parent="Body"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.95, 0)
 
-[node name="Capsule" type="MeshInstance3D" parent="Body/Model"]
-mesh = SubResource("CapsuleMesh_body")
-
-[node name="Nose" type="MeshInstance3D" parent="Body/Model"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.45, -0.38)
-mesh = SubResource("BoxMesh_nose")
+[node name="Gladiator" parent="Body/Model" instance=ExtResource("3_gladiator")]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 0, -0.95, 0)

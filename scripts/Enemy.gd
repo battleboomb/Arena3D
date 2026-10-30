@@ -31,7 +31,20 @@ const BAR_HEIGHT := 0.1
 @export var windup_material: Material
 @export var flash_material: Material
 
+@export_group("모델")
+## 갑옷·치마·투구 깃 같은 소속 부위에 칠할 색
+@export var tint := Color(0.85, 0.16, 0.14)
+@export var show_sword := false
+@export var attack_animation := "punch"
+## 공격 애니메이션에서 타격이 들어가는 시점(초). 예비 동작이 끝날 때 여기에 닿도록 속도를 맞춘다.
+@export var attack_impact_time := 0.4
+@export var run_anim_speed := 1.2
+
+const TINT_PARTS := ["Chest_Armor", "Shoulder_Armor_L", "Shoulder_Armor_R", "Skirt", "Helmet_Crest",
+		"Arm_Guard_L", "Arm_Guard_R", "Leg_Guard_L", "Leg_Guard_R"]
+
 static var _bar_texture: Texture2D
+static var _tint_materials := {}
 
 var health: float
 var state := State.CHASE
@@ -44,9 +57,13 @@ var _knock_velocity := Vector3.ZERO
 var _knock_left := 0.0
 var _health_bar: Node3D
 var _bar_fill: Sprite3D
+var _meshes: Array[MeshInstance3D] = []
+var _base_materials: Array[Material] = []
+var _override: Material
+var _base_pose := ""
 
 @onready var body: Node3D = $Body
-@onready var body_mesh: MeshInstance3D = $Body/Mesh
+@onready var _anim: AnimationPlayer = $Body/Gladiator/AnimationPlayer
 
 
 func _ready() -> void:
@@ -54,6 +71,14 @@ func _ready() -> void:
 	add_to_group("enemies")
 	player = get_tree().get_first_node_in_group("player")
 	_make_health_bar()
+	_setup_model()
+
+
+func _process(_delta: float) -> void:
+	if state == State.DEAD or state == State.WINDUP or state == State.RECOVER:
+		return
+	var moving := Vector2(velocity.x, velocity.z).length() > 0.1 and _knock_left <= 0.0
+	_set_base_pose("run" if moving else "idle")
 
 
 func is_alive() -> bool:
@@ -114,6 +139,7 @@ func _physics_process(delta: float) -> void:
 			if _attack_cooldown <= 0.0 and _can_attack(dist):
 				state = State.WINDUP
 				_state_time = 0.0
+				_play_attack_animation()
 				_on_windup_start()
 		State.WINDUP:
 			_face(to_player)
@@ -167,14 +193,57 @@ func _face(dir: Vector3) -> void:
 		body.rotation.y = atan2(-dir.x, -dir.z)
 
 
+## 소속 부위에 tint 색 머티리얼을 입히고 칼은 show_sword일 때만 보인다.
+func _setup_model() -> void:
+	if not _tint_materials.has(tint):
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = tint
+		mat.roughness = 0.8
+		_tint_materials[tint] = mat
+	for mesh: MeshInstance3D in body.find_children("*", "MeshInstance3D", true, false):
+		if mesh.name == "Sword":
+			mesh.visible = show_sword
+		var base: Material = _tint_materials[tint] if mesh.name in TINT_PARTS else null
+		mesh.material_override = base
+		_meshes.append(mesh)
+		_base_materials.append(base)
+
+
+## 움직이면 달리기, 서 있으면 punch 첫 프레임(팔 내린 자세)으로 멈춘다.
+func _set_base_pose(pose: String) -> void:
+	if pose == _base_pose:
+		return
+	_base_pose = pose
+	if pose == "run":
+		_anim.play("run", 0.1, run_anim_speed)
+	else:
+		_anim.play("punch", 0.1)
+		_anim.seek(0.0, true)
+		_anim.pause()
+
+
+func _play_attack_animation() -> void:
+	_base_pose = ""
+	_anim.stop()
+	_anim.play(attack_animation, 0.05, attack_impact_time / windup_time)
+
+
+## 피격 번쩍임·예비 동작 색은 몸 전체를 덮고, 끝나면 부위별 원래 머티리얼로 돌린다.
+func _set_override(mat: Material) -> void:
+	if mat == _override:
+		return
+	_override = mat
+	for i in _meshes.size():
+		_meshes[i].material_override = mat if mat != null else _base_materials[i]
+
+
 func _update_material() -> void:
 	var mat: Material = null
 	if _flash_left > 0.0:
 		mat = flash_material
 	elif state == State.WINDUP:
 		mat = windup_material
-	if body_mesh.material_override != mat:
-		body_mesh.material_override = mat
+	_set_override(mat)
 
 
 func _die() -> void:
@@ -183,7 +252,8 @@ func _die() -> void:
 	collision_layer = 0
 	collision_mask = 0
 	_health_bar.visible = false
-	body_mesh.material_override = null
+	_set_override(null)
+	_anim.pause()
 	died.emit(self)
 	var tween := create_tween()
 	tween.set_process_mode(Tween.TWEEN_PROCESS_PHYSICS)

@@ -1,6 +1,6 @@
 class_name Player
 extends CharacterBody3D
-## 검투사. 좌클릭/WASD 이동, 우클릭 칼 공격, Q 창 던지기, Space 멀리 구르기.
+## 검투사. WASD 이동, 좌클릭 근접 공격(칼이 없으면 주먹), 우클릭 창 던지기, Space 멀리 구르기.
 ## 공격과 구르기는 모두 마우스 커서 방향으로 나가고 쿨다운으로만 제한한다.
 
 signal died
@@ -8,9 +8,6 @@ signal health_changed(current: float, maximum: float)
 
 @export_group("이동")
 @export var move_speed := 5.0
-@export var stop_distance := 0.2
-## 클릭 목표를 이 안쪽으로 잘라 경기장 벽 앞에서 멈춘다.
-@export var arena_half_size := 19.4
 
 @export_group("체력")
 @export var max_health := 100.0
@@ -39,16 +36,21 @@ signal health_changed(current: float, maximum: float)
 @export var attack_stand_time := 0.15
 @export var dead_material: Material
 
+@export_group("애니메이션")
+## 공격 애니메이션을 이 시간 안에 끝나도록 빨리 돌린다.
+@export var punch_anim_time := 0.45
+@export var slash_anim_time := 0.55
+@export var run_anim_speed := 1.2
+
 var health: float
 var dead := false
+## 보물상자에서 칼을 얻으면 true. 그 전에는 칼 공격 대신 주먹질을 한다.
+var has_sword := false
 ## 남은 쿨다운(초)
 var cooldowns := {"melee": 0.0, "spear": 0.0, "roll": 0.0}
 ## 자동 테스트가 마우스 커서 대신 쓰는 조준점. 평소에는 null.
 var aim_override: Variant = null
 
-var _target := Vector3.ZERO
-var _has_target := false
-var _wait_for_click_release := false
 var _stand_time := 0.0
 var _invulnerable_time := 0.0
 var _hurt_time := 0.0
@@ -57,14 +59,55 @@ var _roll_dir := Vector3.ZERO
 var _roll_speed := 0.0
 var _roll_elapsed := 0.0
 var _facing := Vector3.FORWARD
+var _attack_anim_left := 0.0
+## 지금 재생 중인 기본 동작("idle" 또는 "run")
+var _base_pose := ""
 
 @onready var body: Node3D = $Body
 @onready var model: Node3D = $Body/Model
+@onready var _anim: AnimationPlayer = $Body/Model/Gladiator/AnimationPlayer
+@onready var _sword: Node3D = $Body/Model/Gladiator/Gladiator_Rig/Skeleton3D/hand_R/Sword
 
 
 func _ready() -> void:
 	health = max_health
 	add_to_group("player")
+	_sword.visible = false
+
+
+func equip_sword() -> void:
+	has_sword = true
+	_sword.visible = true
+
+
+func _process(delta: float) -> void:
+	if dead:
+		return
+	_attack_anim_left -= delta
+	if _attack_anim_left > 0.0:
+		return
+	var moving := _rolling or Vector2(velocity.x, velocity.z).length() > 0.1
+	_set_base_pose("run" if moving else "idle")
+
+
+## 걷기 없이 움직이면 달리기, 서 있으면 공격 애니메이션의 첫 프레임(팔 내린 자세)으로 멈춘다.
+func _set_base_pose(pose: String) -> void:
+	if pose == _base_pose:
+		return
+	_base_pose = pose
+	if pose == "run":
+		_anim.play("run", 0.1, run_anim_speed)
+	else:
+		_anim.play("punch", 0.1)
+		_anim.seek(0.0, true)
+		_anim.pause()
+
+
+func _play_attack(anim_name: String, duration: float) -> void:
+	_base_pose = ""
+	_attack_anim_left = duration
+	_anim.stop()
+	_anim.play(anim_name, 0.05, _anim.get_animation(anim_name).length / duration)
 
 
 func cooldown_total(skill: String) -> float:
@@ -101,11 +144,6 @@ func get_aim_point() -> Vector3:
 	return _ground_point(get_viewport().get_mouse_position())
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("move") and not dead and event is InputEventMouseButton:
-		Effects.instance.ring(_clamp_to_arena(_ground_point(event.position)), 0.35, Color(1, 1, 1, 0.8))
-
-
 func _physics_process(delta: float) -> void:
 	for skill in cooldowns:
 		cooldowns[skill] = maxf(cooldowns[skill] - delta, 0.0)
@@ -128,26 +166,13 @@ func _physics_process(delta: float) -> void:
 
 
 func _process_move() -> void:
-	if not Input.is_action_pressed("move"):
-		_wait_for_click_release = false
-	var input := Input.get_vector("move_left", "move_right", "move_up", "move_down")
-	var dir := Vector3.ZERO
-	if input != Vector2.ZERO:
-		_has_target = false
-		dir = _screen_to_world(input)
-	elif Input.is_action_pressed("move") and not _wait_for_click_release:
-		_target = _clamp_to_arena(get_aim_point())
-		_has_target = true
 	if _stand_time > 0.0:
 		velocity = Vector3.ZERO
 		return
-	if dir == Vector3.ZERO and _has_target:
-		var to_target := _target - global_position
-		to_target.y = 0.0
-		if to_target.length() <= stop_distance:
-			_has_target = false
-		else:
-			dir = to_target.normalized()
+	var input := Input.get_vector("move_left", "move_right", "move_up", "move_down")
+	var dir := Vector3.ZERO
+	if input != Vector2.ZERO:
+		dir = _screen_to_world(input)
 	if dir != Vector3.ZERO:
 		dir = Steering.avoid(self, dir)
 		_face(dir)
@@ -159,6 +184,10 @@ func _melee() -> void:
 	cooldowns.melee = melee_cooldown
 	var dir := _aim_direction()
 	_begin_attack_stand(dir)
+	if has_sword:
+		_play_attack("sword-slash", slash_anim_time)
+	else:
+		_play_attack("punch", punch_anim_time)
 	var half_angle := deg_to_rad(melee_angle * 0.5)
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		if not enemy.is_alive():
@@ -187,8 +216,6 @@ func _throw_spear() -> void:
 func _begin_attack_stand(dir: Vector3) -> void:
 	_face(dir)
 	_stand_time = attack_stand_time
-	_has_target = false
-	_wait_for_click_release = Input.is_action_pressed("move")
 	velocity = Vector3.ZERO
 
 
@@ -203,7 +230,6 @@ func _start_roll() -> void:
 	_roll_speed = dist / roll_time
 	_roll_elapsed = 0.0
 	_rolling = true
-	_has_target = false
 	cooldowns.roll = roll_cooldown
 	_face(_roll_dir)
 	Effects.instance.disc(global_position, 0.7, Color(0.93, 0.85, 0.68, 0.7))
@@ -224,8 +250,9 @@ func _process_roll(delta: float) -> void:
 func _die() -> void:
 	dead = true
 	velocity = Vector3.ZERO
+	_anim.pause()
 	body.visible = true
-	for mesh in model.get_children():
+	for mesh: MeshInstance3D in model.find_children("*", "MeshInstance3D", true, false):
 		mesh.material_override = dead_material
 	model.rotation = Vector3(0.0, 0.0, PI * 0.5)
 	model.position.y = 0.4
@@ -266,7 +293,3 @@ func _ground_point(screen_pos: Vector2) -> Vector3:
 	var cam := get_viewport().get_camera_3d()
 	var hit = Plane(Vector3.UP, 0.0).intersects_ray(cam.project_ray_origin(screen_pos), cam.project_ray_normal(screen_pos))
 	return hit if hit != null else global_position
-
-
-func _clamp_to_arena(point: Vector3) -> Vector3:
-	return Vector3(clampf(point.x, -arena_half_size, arena_half_size), 0.0, clampf(point.z, -arena_half_size, arena_half_size))
